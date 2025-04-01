@@ -1,0 +1,158 @@
+Bug 1: OS was kept crashing even though the code was correct
+Fix 1: Commenting out the The test function call in kernel.c  because it
+called unimplemented parts of the code. This was a couple hours long bug fix that needed one line of code change
+
+Bug 2: The pic wasn't responding the keyboard input.
+Fix 2: We ended up replacing the port and value inputs in the outb() function. This was a 2 hour bug fix that required one line of code change
+
+Bug 3: The os was boot looping repeatedly when paging was set up.
+FIX 3: We resolved the issue by adding a extern declaration in the union of the 4kb and 4mb structs. This was a 6 hour bug fix that required a few lines of code change
+
+Bug 4: When we pressed a key we got two characters displayed on the screen. One of them being right and the second one being wrong.
+Fix 4: We added an if statnment to filter out the scan codes that are out of range since pressing a key read two scan codes one when pressed
+        and the other when releasing the key. We filtered out the scan codes sent after releasing the key. This was a 20 minute bug fix that required a few lines of code change
+
+Bug 5: The keyboard was not outputting anything on the screen when the pic was working.
+Fix 5: We had to comment out the sti() function in the kernel.c file. This was a 4 hour bug fix that required one line of code change
+
+Bug 6: When initializing the GDT, the kernel wasn't getting the right address
+Fix 6: We looked at how the IDT was structured and created and declared a new label to properly reference the GDT. This was a 2 hour bug fix that required a few lines of code change
+
+Bug 7: The keyboard only printed one character on the screen even after repeatedly pressing other keys.
+Fix 7: Our eoi() function in the pic was wrong where we added an OR operation with the irq number. This was a 30 minute bug fix that required a few lines of code change
+
+Bug 8: Our page table wasn't aligned in memory, so info mem gave wrong numbers  
+Fix 8: We added align attributes to our idt and that resolved the alignment issue. This was a one hour bug that required 2 lines of code change
+
+Bug 9: We were setting the wrong value into the page directory for the mb kernel page, so info mem gave wrong numbers   
+Fix 9: We had to change the address right shifting to make it 10 bits. This was a 30 minute hour bug that required 2 lines of code change
+
+Bug 10: We were using the union and it was giving compile issues
+Fix 10: We had to change the syntax of the union in order to remove these issues. This was a 30 minute hour bug that required 2 lines of code change
+
+checkpoint 3.2
+
+Bug 1: When trying to print the directory data on the kernel we kept on getting page fault.
+Solutionn 1: We resolved the page fault error by using a 2d buffer to store the result. We were basically trying to store a string at each index in the array where
+        it could only store chars per index.
+
+Bug 2: The 2d array solution fixed on isssue in the code but our code was still somehow page faulting.
+Fix 2: We resolved this bug by going back to a 1d arary and using row major order to store chars in a 1d array. This solved the paging fault and printed the directory contens
+        on to the screen.
+
+Bug 3: The kernal page faulting when trying to test it.
+Fix 3: I was using a standard array for storing the file name and needed to do so in row major order. Decided to switch to a struct based approach and start storing inode values
+        rathen than file names simplying the overall implementation.
+
+Bug 4:  When testing rtc the rtc_handler was still printing out random characters using the test_interrupts() function. 
+Fix 4: I was commenting out the line that called the test_interrupts() function. Fix took 15 min  	
+
+Bug 5: when testing rtc_open, the characters weren’t printing out at 2hz, they were printing out much slower. 
+Fix 5: I was changing the number of rtc interrupts you count when rtc is set at 2hz. I assumed the max rtc frequency was 2048, but it's actually closer to 1024. Fix took 30 min 
+
+Bug 6: When typing to the terminal by calling the terminal_write function, only some characters were printing while others did nothing
+Fix 6: In the write function an if statement was returning -1 if the scancode was out of bounds, but it was instead preventing 
+        scancodes over a certain value from printing. This was a 30 minute fix.
+
+Bug 7: When there were no characters on the screen the backspace button would somehow exit the terminal back to the boot screen
+Fix 7: This was mended by checking if the index was above zero to make sure that we are not trying to delete something when we are at index 0. This was a 15 minute fix.
+
+Bug 8: When the edge of the screen was reached, a weird character was printed and it wrapped back around without a newline.
+Fix 8: The value being written to the terminal was the keyboard scan value for enter which printed some random ascii character, but what needed to happen was the ascii representation 
+        of newline had to be put into the keyboard buffer and the index incremented, which also counts as a character. 30 minute fix
+
+Bug 9: The the terminal input echo would sometimes be incorrect and mess up subsequent inputs, indicating an issued with one of the buffers
+Fix 9: The way that the program tracked how many bytes to read from the keyboard buffer was causing issues, so it was deleted and the buffer
+        index was used instead, which was always accurate. This took 30 mins to find.
+
+Bug 10: When ctrl + L was used there was an extra newline at the top of the terminal causing the cursor to be one line lower than it should be.
+Fix 10: Changed the control flag from a variable to a array that holds the control state and, if relevant, the key that is currently pressed
+
+checkpoint 3.3
+
+Bug 1: When running the shell the system was unable to recognize any commands less then 32 bits and ended up adding random garbage to fill all 32 spots.
+Fix 1: We resolved the bug by checking if all the charactors from the command are copyed and when we encounter a command less than 32 bits we add an end of name tag to know that
+        the full file name has been copied
+
+Bug 2: When we tried to run pingpong after ls we sometimes got a command not found and sometimes it worked.
+Fix 2: We fixed this error by making sure all the end of line tags are stored as chars. Before some were strings some were chars resulting in this unexpected behaviour.
+
+Bug 3: The system wasen't recognizing the ls command.
+Fix 3: We had this error as we tried to store all the file names in the buffer exceding the total allocated size of the buffer. We fixed this problem by storing one file name 
+        in the buffer and then imediatly printing it on the screen so that the next file name can over write on the buffer.
+
+Bug 4: Execute was boot looping
+fix4 : we had to change the tss value since we were setting that wrong. Once we changed the value it stopped bootlooping
+
+bug 5: When the halt system call was being executed it gave us an error of invalid opcode exception.
+fix 4: This turned out to be because we were not properly updating our parent pid or the current pid in either execute or halt. This took 5 hours.
+
+checkpoint 3.4
+
+Bug 1: When running cat with a file like frame0.txt the printing would cut off midway through
+Fix 1: This was an issue where we were only going a max of 127 characters in terminal write. To fix this we removed this write limit. this was a 30 minute fix that required a few lines of code change
+
+Bug 2: We weren't checking the arguments correctly for vidmap
+Fix 2: We had to check whether the screen_start argument in vidmap falls within the range the program image in user memory. Originally I wasn't doing this.
+
+Bug 3: When we ran info mem when we wrote vidmap, we were getting the wrong values
+Fix 3: This was due to us implementing paging slightly wrong. We had originally assigned a new page directory entry in virtual memory at 136MB, where instead we should have assigned
+a new page directory entry in virtual memory at 132Mb
+
+Bug 4: When running cat with a file our format of read file was not matching with what cat expected, so it wouldn't print correctly 
+Fix 4: This was a bug where we had to reformat our readfile to have the correct return values and to update file_position more. This took 30 minutes to fix
+
+Bug 5: After reassigning paging in vidmap, we were getting a page fault exception
+Fix 5: I wasn't flushing tlb after reassigning paging in vidmap
+
+Bug 6: file names over 32 like verylargetextwithverylongname.txt were able to be cat'd
+Fix 6: This was an easy fix where we changed the args buffer related to the arguments to the terminal buffer length rather than filename length of 32. This was a 10 minute fix that required a few lines of code change
+
+checkpoint 3.5
+
+Bug 1: We wanted to start up the three shells on startup, but we were assigning our scheduled ebp and esp for our base shells wrong, based on how we were starting up our shells
+Fix 1: The fix was starting up the first shell in kernel.c rather than on the first pit interrupt(we started the other two shells on the first 2 pit interrupts), this allowed us to 
+        properly store the scheduled ebp and esp values for the base shells. This fix took about 3 hrs, a lot of stepping through code and understanding how the kernel stack works 
+        was needed to solve this
+
+Bug 2: We were saving ebp and esp wrong in our processes in our scheduling logic
+Fix 2: We had to modify our pcb struct, and how we save ebp and esp. We had to seperate the ebp and esp we store for a process in execute, and the ebp and esp we store when a pit
+        interrupt occurs. As a result we had 2 sets of ebp and esp values in our pcb struct. This allows us to reload the appropriate ebp and esp values when halting, as well as 
+        when we schedule and jump to a new process. Time to fix was 1 hr, it was a design choice we changed late into our development
+
+Bug 3: When we typed the letters we typed were only showing on the screen 1/3 of the time
+Fix 3: this issue was with the paging being set to the scheduled terminal while we were trying to type, meaning it was printing on the scheudled terminal. We had to redirect the 
+        paging to the main video memory to ensure it only printed to the visible screen whenever we typed. We did this by making a keyboardputc function and this took 3 hours to 
+        figure out and was a function that we had to add
+
+Bug 4: When we ran 2 pingpongs the first one we ran paused
+Fix 4: this issue was with the rtc and how we didnt have a version of the local variables for each terminal. We fixed this by having multiple versions of the local variables that 
+        were specific to each terminal to keep track correctly. This was a 3 hour bug fix that required around 20 lines of code change
+
+Bug 5: When we ran either pingpong or fish it was running very slow
+Fix 5: This was an issue with rtc since in the handler we werent updating the local variables for all terminals, just for the scheduled one. We fixed this by decrementing the count 
+        and updating other variables for all 3 versions of the rtc variables in the handler. This was a 2 hour bug that required 5 lines of code change
+
+Bug 6: When we ran the hello program and filled up the buffer the next shell appeared in the same line as the next shell.
+Fix 6: We resolved the issue by adding an <= sign from < sign in terminal read function. Initially the code was stopping one char short and wasen't reading the new 
+        line character when the buffer was full. 1 hour fix
+
+Bug 7: While typing, after another process halted in a different terminal, the input in the current terminal was not read when enter was pressed.
+Fix 7: We resolved the issue by replacing current terminal in buffer_clear_only function to scheduled terminal. So the code was clearing the buffer of the terminal the user 
+        was on instead of the terminal that was scheduled. 2 hours fix
+
+Bug 8: When the grep command was used when a program was executing in the background, it would return an error and not work.
+Fix 8: When the close syscall was called on the file that grep was checking, we were not properly setting which pcb needed to be changes so it was trying to close a different 
+        pcb than the one were supposed to close resulting in an error. 6 hours fix
+
+Bug 9: When running the fish program in different terminals, the color was incorrect and defaulted to grey.
+Fix 9: In our scheduling algorithm, we made sure to clear the screen which set the color attribute to the correct color corresponding to the terminal. 4 hours fix
+
+Bug 10 : When running a program in any terminal except the first, hitting enter would do nothing or cause boot looping.
+Fix 10: The problem was that we were using one enter flag to track enter key presses for every terminal so it ended up always doing enter for terminal one. We created an array 
+        to hold an enter flag that was specific to each terminal so that when enter was pressed, only the current terminal would read the keyboard input then execute the program. 
+        5 hours fix
+
+Bug 11: When a program halted it was generating a general protection fault.
+Fix 11: In the execute syscall there was a typo in the variable to keep track of the current PCB's ebp and esp which meant that when halt was called it would cause errors up on trying
+        to return from halt using the flawed ebp and esp.
